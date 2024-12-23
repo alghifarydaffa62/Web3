@@ -1,32 +1,28 @@
 const http = require('http');
+const fs = require('fs');
 
 const server = http.createServer(function(request, response) {
-  response.statusCode = 200;
-  response.setHeader('Content-Type', 'text/html');
-  response.end(HTML);
+    let filename = "index.html";
+    let contentType = "text/html";
+    if(request.url === "/style.css") {
+        filename = "style.css";
+        contentType = "text/css";
+    }
+
+    fs.readFile(filename, function(err, content) {
+        if(err) {
+            response.statusCode = 500;
+            response.end("Could not serve ${filename}");
+        }
+        else {
+            response.statusCode = 200;
+            response.setHeader('Content-Type', contentType);
+            response.end(content);
+        }
+    });
 });
 
 server.listen({ port: 3000, host: 'localhost' }, function() {
   console.log('Server is running!');
 });
 
-const HTML = `
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>My Hello World</title>
-    <style>
-      body {
-        background-color: black;
-        color: yellow;
-        text-align: center;
-        font-size: 40px;
-      }
-    </style>
-  </head>
-  <body>
-    Hello World
-  </body>
-</html>
-`;
