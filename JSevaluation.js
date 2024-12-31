@@ -1,4 +1,4 @@
-function processData() {
+function processData(number, callback) {
     return {
 
     }
