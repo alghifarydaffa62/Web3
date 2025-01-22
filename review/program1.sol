@@ -2,28 +2,29 @@
 pragma solidity ^0.8.20;
 
 contract Account {
-    address public User;
+    mapping(address => uint) public balances;
 
-    constructor(address deployer) {
-        User = deployer;
+    function isOwner() external {
+
     }
 
-    mapping(address => uint) identify;
+    event deposited(address indexed user, uint amount);
+    event withdrawn(address indexed user, uint amount);
 
-    receive() external payable {
-        identify[msg.sender] += msg.value;
+    function deposit(uint amount) external payable {
+        require(amount > 0, "0 ether means no ether mate");
+        balances[msg.sender] += amount;
+        emit deposited(msg.sender, amount);
     }
 
-    function Transfer(uint amount) external {
-        require(identify[msg.sender] >= amount);
-        identify[msg.sender] -= amount;
-
-        (bool success,) = address(this).call{value: amount} ("");
+    function withdraw(uint amount) external payable {
+        require(balances[msg.sender] >= amount, "insufficient balance");
+        balances[msg.sender] -= amount;
+        (bool success,) = msg.sender.call{value: amount}("");
         require(success);
-    }   
-
-    function withdraw() external {
-        
     }
 
+    function Bal(address user) external view returns(uint){
+        return balances[user];
+    }
 }
