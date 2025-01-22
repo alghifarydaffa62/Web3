@@ -4,12 +4,12 @@ pragma solidity ^0.8.20;
 contract Account {
     mapping(address => uint) public balances;
 
-    function isOwner() external {
-
-    }
-
     event deposited(address indexed user, uint amount);
     event withdrawn(address indexed user, uint amount);
+
+    function isOwner(address x) public view returns(bool) {
+        return balances[x] > 0;
+    }
 
     function deposit(uint amount) external payable {
         require(amount > 0, "0 ether means no ether mate");
@@ -18,7 +18,9 @@ contract Account {
     }
 
     function withdraw(uint amount) external payable {
+        require(isOwner(msg.sender), "You are not the owner");
         require(balances[msg.sender] >= amount, "insufficient balance");
+
         balances[msg.sender] -= amount;
         (bool success,) = msg.sender.call{value: amount}("");
         require(success);
