@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import "../src/program1.sol";
+import "../src/Account.sol";
 
 contract AccountTest is Test {
     Account public account;
@@ -65,6 +65,4 @@ contract AccountTest is Test {
 
         vm.stopPrank(); 
     }
-
-
 }
