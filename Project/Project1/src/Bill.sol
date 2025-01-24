@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-contract Account {
+contract Bill {
     mapping(address => uint) public balances;
 
     event deposited(address indexed user, uint amount);

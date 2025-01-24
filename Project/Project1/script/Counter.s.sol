@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {Script, console} from "forge-std/Script.sol";
-import {Account} from "../src/Account.sol";
+// import {Account} from "../src/Account.sol";
 
 // contract CounterScript is Script {
 //     Account account;
