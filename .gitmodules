@@ -1,9 +1,0 @@
-[submodule "lib/forge-std"]
-	path = lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
-[submodule "Project/Project1/lib/forge-std"]
-	path = Project/Project1/lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
-[submodule "Project/Project2/lib/forge-std"]
-	path = Project/Project2/lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
