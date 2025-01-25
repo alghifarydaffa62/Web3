@@ -18,14 +18,15 @@ contract SecureWallet {
     event transfered(address indexed sender, address indexed recipient, uint amount);
 
     function depositEther(uint amount) external payable {
-        require(Owner[msg.sender].isOwner);
+        require(Owner[msg.sender].isOwner, "Not the owner!");
+        require(amount > 0, "Must more than 0");
         Owner[msg.sender].balances += amount;
         emit deposited(msg.sender, amount);
     }
 
     function withdrawEther(uint amount) external payable {
+        require(Owner[msg.sender].isOwner, "Not the owner!");
         require(Owner[msg.sender].balances >= amount, "Insufficient balances!");
-        require(Owner[msg.sender].isOwner);
         
         Owner[msg.sender].balances -= amount;
         (bool success,) = msg.sender.call{value: amount}("");
@@ -34,12 +35,12 @@ contract SecureWallet {
     }
 
     function Transfer(address recipient, uint amount) external payable {
-        require(Owner[msg.sender].isOwner);
-        require(Owner[recipient].isOwner);
+        require(Owner[msg.sender].isOwner, "Not the owner!");
         require(Owner[msg.sender].balances >= amount, "Insufficient balances!");
+        require(Owner[recipient].isOwner, "Not the owner!");
         
-        (bool success,) = recipient.call{value: amount}("");
-        require(success);
+        Owner[msg.sender].balances -= amount;
+        Owner[recipient].balances += amount;
 
         emit transfered(msg.sender, recipient, amount);
     }
