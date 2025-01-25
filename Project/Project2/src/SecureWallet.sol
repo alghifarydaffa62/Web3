@@ -10,7 +10,7 @@ contract SecureWallet {
     mapping(address => User) public Owner;
 
     modifier onlyOwner {
-         require(Owner[msg.sender].isOwner, "Not an owner!");
+         require(Owner[msg.sender].isOwner, "You are not an owner!");
          _;
     }
 
@@ -20,7 +20,7 @@ contract SecureWallet {
     event transfered(address indexed sender, address indexed recipient, uint amount);
 
     function registerOwner() external {
-        require(!Owner[msg.sender].isOwner, "Already registered");
+        require(!Owner[msg.sender].isOwner, "Already registered!");
         Owner[msg.sender].isOwner = true;
         emit registered(msg.sender);
     }
