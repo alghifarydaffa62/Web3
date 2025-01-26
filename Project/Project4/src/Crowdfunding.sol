@@ -3,32 +3,46 @@ pragma solidity ^0.8.20;
 
 contract CrowdFunding {
     struct Campaign {
+        address owner;
         uint targetAmount;
         uint deadline;
         uint totalAmount;
         bool isComplete;
-        bool isOwner;
     }
 
-    mapping(address => Campaign) public campaigns;
+    mapping(uint => Campaign) public campaigns;
+    uint campaignID;
 
-    function registerOwner() external {
-        campaigns[msg.sender].isOwner = true;
-    }
+    event CampaignCreated(address indexed owner, uint target, uint deadline);
+    event donateSuccess(address indexed donor, uint amount);
 
     function createCampaign(uint _targetAmount, uint _deadline) external {
-        require(campaigns[msg.sender].isOwner, "You need to register first!");
-        campaigns[msg.sender] = Campaign({
+        campaignID++;
+        campaigns[campaignID] = Campaign({
+            owner: msg.sender,
             targetAmount: _targetAmount,
-            deadline: block.timestamp + _deadline,
             totalAmount: 0,
-            isComplete: false,
-            isOwner: true
+            deadline: block.timestamp + _deadline,
+            isComplete: false
         });
+
+        emit CampaignCreated(msg.sender, _targetAmount, _deadline);
     }
 
-    function donate() external payable {
-        require(msg.value > 0, "Need to send ether!");
-        campaigns[msg.sender].totalAmount += msg.value;
+    function donate(uint Id) external payable {
+        Campaign storage campaign = campaigns[Id];
+        require(!campaign.isComplete, "Campaign already closed!");
+        require(block.timestamp <= campaign.deadline, "Campaign already expired!");
+        require(msg.value > 0, "must send ether!");
+
+        campaign.totalAmount += msg.value;
+        emit donateSuccess(msg.sender, msg.value);
+    }
+
+    function withdraw(uint Id) external payable {
+        Campaign storage campaign = campaigns[Id];
+        require(campaign.totalAmount == campaign.targetAmount);
+        require(block.timestamp > campaign.deadline, "Campaign is still active!");
+        require(!campaign.isComplete);
     }
 }
