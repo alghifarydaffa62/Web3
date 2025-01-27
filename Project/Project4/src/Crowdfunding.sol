@@ -12,8 +12,8 @@ contract CrowdFunding {
         mapping(address => uint) donates;
     }
 
-    mapping(uint => Campaign) private campaigns;
-    uint private campaignCount;
+    mapping(uint => Campaign) public campaigns;
+    uint public campaignCount;
 
     event CampaignCreated(address indexed owner, uint target, uint deadline);
     event donateSuccess(address indexed donor, uint amount);
@@ -60,7 +60,7 @@ contract CrowdFunding {
         require(!campaign.isComplete, "Funds already withdrawn!");
 
         uint total = campaign.totalAmount;
-    
+        
         (bool success,) = msg.sender.call{value: total}("");
         require(success);
         campaign.totalAmount = 0;
