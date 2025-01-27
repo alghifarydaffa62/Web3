@@ -13,7 +13,7 @@ contract CrowdFunding {
     }
 
     mapping(uint => Campaign) private campaigns;
-    uint campaignCount;
+    uint private campaignCount;
 
     event CampaignCreated(address indexed owner, uint target, uint deadline);
     event donateSuccess(address indexed donor, uint amount);
