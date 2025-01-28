@@ -13,3 +13,6 @@
 [submodule "Project/Crowdfunding/lib/forge-std"]
 	path = Project/Crowdfunding/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "Project/Securewallet/lib/forge-std"]
+	path = Project/Securewallet/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
