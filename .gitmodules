@@ -7,3 +7,6 @@
 [submodule "Project/Bill/lib/forge-std"]
 	path = Project/Bill/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "Project/Charity/lib/forge-std"]
+	path = Project/Charity/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
