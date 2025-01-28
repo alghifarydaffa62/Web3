@@ -5,7 +5,7 @@ import {Test, console} from "forge-std/Test.sol";
 import {CrowdFunding} from "../src/Crowdfunding.sol";
 
 contract CrowdFundingTest is Test {
-    CrowdFunding private crowdfunding;
+    CrowdFunding public crowdfunding;
     address owner;
     address donor1;
     address donor2;
@@ -60,17 +60,30 @@ contract CrowdFundingTest is Test {
         crowdfunding.createCampaign(targetAmount, deadline);
         uint campaignId = getMockedCampaignId();
 
-        vm.prank(donor1);
+        // Donor mendanai kampanye
         vm.deal(donor1, 10 ether);
+        vm.prank(donor1);
         crowdfunding.donate{value: 10 ether}(campaignId);
 
+        // Berikan saldo ke kontrak agar withdraw berhasil
+        vm.deal(address(crowdfunding), 10 ether);
+
+        (, , , , uint total,) = crowdfunding.campaigns(campaignId);
+        assertEq(total, 10 ether, "FALSE!");
+
+        // Lewati waktu agar campaign selesai
         vm.warp(block.timestamp + 2 days);
 
+        // Simpan saldo awal pemilik
         uint initialBalance = address(owner).balance;
-        crowdfunding.withdraw(campaignId);
-        uint finalBalance = address(owner).balance;
 
-        assertEq(finalBalance, initialBalance - 10 ether, "Owner withdrawal mismatch");
+        // Pemilik menarik dana
+        vm.prank(owner);
+        crowdfunding.withdraw(campaignId);
+
+        // Saldo setelah menarik dana
+        uint finalBalance = address(owner).balance;
+        assertEq(finalBalance, initialBalance + 10 ether, "Owner withdrawal mismatch");
 
         (, , , , uint totalAmount, bool isComplete) = crowdfunding.campaigns(campaignId);
         assertEq(totalAmount, 0, "Campaign total amount should be zero after withdrawal");

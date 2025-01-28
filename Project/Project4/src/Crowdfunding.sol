@@ -51,22 +51,23 @@ contract CrowdFunding {
         emit donateSuccess(msg.sender, msg.value);
     }
 
-    function withdraw(uint Id) external payable {
+    function withdraw(uint Id) external payable{
         Campaign storage campaign = campaigns[Id];
         require(campaign.owner != address(0), "Campaign is not existed!");
         require(msg.sender == campaign.owner, "You are not the owner");
         require(campaign.totalAmount >= campaign.targetAmount, "Target has not been achieved");
         require(block.timestamp > campaign.deadline, "Campaign is still active!");
         require(!campaign.isComplete, "Funds already withdrawn!");
-
+        
+        campaign.isComplete = true;
         uint total = campaign.totalAmount;
+        require(address(this).balance >= total, "Contract does not have enough balance!");
         
         (bool success,) = msg.sender.call{value: total}("");
-        require(success);
+        require(success, "Failed!, this is the error!");
         campaign.totalAmount = 0;
-        campaign.isComplete = true;
 
-        emit withdrawn(msg.sender, campaign.targetAmount);
+        emit withdrawn(msg.sender, total);
     }
 
     function refund(uint Id) external payable {
