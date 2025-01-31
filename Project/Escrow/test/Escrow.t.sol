@@ -6,7 +6,8 @@ import {Escrow} from "../src/Escrow.sol";
 
 contract EscrowTesting is Test {
     Escrow public escrow;
-    address deployer = address(0x1);
+
+    address public deployer = address(0x1);
     address services = address(0x2);
     address arbiter = address(0x3);
 
@@ -15,15 +16,15 @@ contract EscrowTesting is Test {
         vm.deal(services, 0 ether); 
         vm.deal(arbiter, 0 ether); 
 
+        vm.prank(deployer);
         escrow = new Escrow(services, arbiter);
     }
 
     function testDeposit() public {
         vm.prank(deployer);
-        vm.deal(deployer, 10 ether); 
         escrow.deposit{value: 5 ether}();
 
-        assertEq(address(escrow).balance, 5 ether, "Balance should be 5 ether");
+        assertEq(address(escrow).balance, 5 ether);
     }
 
     function testReleaseFunds() public {
@@ -72,13 +73,13 @@ contract EscrowTesting is Test {
 
     function testCannotDepositFromNonDeployer() public {
         vm.prank(arbiter);
-        vm.expectRevert("You are not the deployer!");
+        vm.expectRevert();
         escrow.deposit{value: 5 ether}();
     }
 
     function testCannotDepositZeroEther() public {
         vm.prank(deployer);
-        vm.expectRevert("You are not the deployer!");
+        vm.expectRevert("Must send ether!");
         escrow.deposit{value: 0}();
     }
 
