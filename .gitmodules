@@ -19,3 +19,6 @@
 [submodule "Project/Escrow/lib/forge-std"]
 	path = Project/Escrow/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "Project/Payroll/lib/forge-std"]
+	path = Project/Payroll/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
