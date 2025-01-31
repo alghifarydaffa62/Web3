@@ -9,15 +9,24 @@ contract Payroll {
     
     Employee[] public employees;
     address public Admin;
+    uint companyBalance;
 
     modifier onlyAdmin {
         require(msg.sender == Admin, "only Admin!");
         _;
     }
 
+    event depositSuccess(address indexed admin, uint amount);
     event employeeRegisterSuccess(address indexed admin, address indexed employee, uint salary);
     event salaryPayed(address indexed admin, address indexed employee, uint salary);
     event employeeFired(address indexed admin, address employee);
+
+    function deposit() external payable onlyAdmin {
+        require(msg.value > 0, "Must send ether!");
+        companyBalance += msg.value;
+
+        emit depositSuccess(msg.sender, msg.value);
+    }
 
     function addEmployee(address _employee, uint _salary) external onlyAdmin {
         require(!findEmployee(_employee), "Employee already registered!");
@@ -36,16 +45,16 @@ contract Payroll {
         return false;
     }
 
-    function paySalaries() external payable onlyAdmin {
-        uint companyBalance = 0;
+    function paySalaries() external onlyAdmin {
+        uint totalSalaries = 0;
 
         for(uint i = 0; i < employees.length; i++) {
-            companyBalance += employees[i].salary;
+            totalSalaries += employees[i].salary;
         }
 
-        for(uint i = 0; i < employees.length; i++) {
-            require(companyBalance >= employees[i].salary, "Not enough balance to pay salary!");
+        require(companyBalance >= totalSalaries, "Not enough balance to pay salary!");
 
+        for(uint i = 0; i < employees.length; i++) {
             (bool success,) = employees[i].employee.call{value: employees[i].salary}("");
             require(success, "Payment failed!");
             emit salaryPayed(msg.sender, employees[i].employee, employees[i].salary);
