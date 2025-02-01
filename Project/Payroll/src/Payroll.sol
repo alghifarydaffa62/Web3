@@ -11,6 +11,10 @@ contract Payroll {
     address public Admin;
     uint companyBalance;
 
+    constructor() {
+        Admin = msg.sender;
+    }
+
     modifier onlyAdmin {
         require(msg.sender == Admin, "only Admin!");
         _;
@@ -57,6 +61,7 @@ contract Payroll {
         for(uint i = 0; i < employees.length; i++) {
             (bool success,) = employees[i].employee.call{value: employees[i].salary}("");
             require(success, "Payment failed!");
+            companyBalance -= employees[i].salary;
             emit salaryPayed(msg.sender, employees[i].employee, employees[i].salary);
         }
     }
@@ -72,4 +77,21 @@ contract Payroll {
         }
     }
 
+    // FUNCTION HELPER TESTING
+    function getEmployee(uint index) public view returns (address, uint) {
+        require(index < employees.length, "Index out of bounds");
+        return (employees[index].employee, employees[index].salary);
+    }
+
+    function getTotalSalaries() public view returns (uint) {
+        uint total = 0;
+        for (uint i = 0; i < employees.length; i++) {
+            total += employees[i].salary;
+        }
+        return total;
+    }
+
+    function getEmployeeCount() public view returns (uint) {
+        return employees.length;
+    }
 }
