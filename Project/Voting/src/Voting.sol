@@ -80,7 +80,8 @@ contract Voting {
         require(!voters[msg.sender].hasVoted, "You already vote!");
         require(candidateId < candidateList.length, "Invalid ID!");
 
-        candidateList[candidateId].totalVote++;
+        address votedAddr = candidateList[candidateId].candidateAddr;
+        candidates[votedAddr].totalVote++;
         voters[msg.sender].votedCandidate = candidateId;
         voters[msg.sender].hasVoted = true;
 
@@ -101,19 +102,34 @@ contract Voting {
         emit VotingEnded(msg.sender);
     }
 
-    function showResult() external view returns (address[] memory, uint[] memory) {
+    function showProgress() external view returns(uint[] memory, uint[] memory) {
+        uint totalCandidates = candidateList.length;
+        uint[] memory candidateIds = new uint[](totalCandidates);
+        uint[] memory total = new uint[](totalCandidates);
+
+        for(uint i = 0; i < totalCandidates; i++) {
+            candidateIds[i] = candidateList[i].candidateID;
+            total[i] = candidateList[i].totalVote;
+        } 
+
+        return (candidateIds, total);
+    }
+
+    function showResult() external view returns (uint[] memory, address[] memory, uint[] memory) {
         require(!voteStart, "Vote still active!");
         
         uint totalCandidates = candidateList.length;
-        address[] memory candidateAddress = new address[](totalCandidates);
-        uint[] memory invoice = new uint[](totalCandidates);
+        uint[] memory candidateIds = new uint[](totalCandidates);
+        address[] memory candidateAddr = new address[](totalCandidates);
+        uint[] memory votes = new uint[](totalCandidates);
 
-        for(uint i = 0; i < candidateList.length; i++) {
-            candidateAddress[i] = candidateList[i].candidateAddr;
-            invoice[i] = candidates[candidateList[i].candidateAddr].totalVote;
+        for(uint i = 0; i < totalCandidates; i++) {
+            candidateIds[i] = candidateList[i].candidateID;
+            candidateAddr[i] = candidateList[i].candidateAddr;
+            votes[i] = candidateList[i].totalVote;
         }
 
-        return (candidateAddress, invoice);
+        return (candidateIds, candidateAddr, votes);
     }
 
 }
