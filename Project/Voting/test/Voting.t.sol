@@ -35,5 +35,15 @@ contract VotingTesting is Test {
         voting.registerVoter(voter5);
         voting.registerVoter(voter6);
         voting.registerVoter(voter7);
+        vm.stopPrank();
+
+        (, , , bool isRegistered) = voting.voters(voter1);
+        assertTrue(isRegistered, "Voter1 register failed!");
+    }
+
+    function testRegisterVoternotAdmin() public {
+        vm.prank(candidate1);
+        vm.expectRevert("Only Admin!");
+        voting.registerVoter(voter1);   
     }
 }
