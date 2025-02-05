@@ -88,7 +88,7 @@ contract VotingTesting is Test {
     }
 
     function testShowProgress() public {
-        vm.prank(admin);
+        vm.startPrank(admin);
         voting.registerVoter(voter1);
         voting.registerVoter(voter2);
         voting.registerVoter(voter3);
@@ -106,12 +106,11 @@ contract VotingTesting is Test {
         vm.prank(voter3);
         voting.castVote(1);
 
-        vm.prank(admin);
-        voting.closeVoting();
-
-        (uint[] memory ids, uint[] memory votes) = voting.showProgress();
-        assertEq(votes[0], 1, "Candidate1 harus memiliki 1 suara!");
-        assertEq(votes[1], 1, "Candidate2 harus memiliki 1 suara!");
+        (uint[] memory candidateIds, uint[] memory total) = voting.showProgress();
+        assertEq(candidateIds[0], 0, "candidate1 should have id 0");
+        assertEq(candidateIds[1], 1, "candidate2 should have id 1");
+        assertEq(total[0], 2, "candidate1 should have 2 totalvotes");
+        assertEq(total[1], 1, "candidate1 should have 1 totalvotes");
     }
 
     function testShowResult() public {
@@ -134,7 +133,11 @@ contract VotingTesting is Test {
         vm.prank(admin);
         voting.closeVoting();
 
-        (uint[] memory ids, address[] memory addresses, uint[] memory votes) = voting.showResult();
+        (uint[] memory candidateIds, address[] memory candidateAddr, uint[] memory votes) = voting.showResult();
+        assertEq(candidateIds[0], 0, "candidate1 should have id 0");
+        assertEq(candidateIds[1], 1, "candidate2 should have id 1");
+        assertEq(candidateAddr[0], candidate1, "Candidate1 address not equal");
+        assertEq(candidateAddr[1], candidate2, "Candidate2 address not equal");
         assertEq(votes[0], 2, "Candidate1 harus memiliki 2 suara!");
         assertEq(votes[1], 0, "Candidate2 harus memiliki 0 suara!");
     }

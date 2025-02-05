@@ -105,11 +105,13 @@ contract Voting {
     function showProgress() external view returns(uint[] memory, uint[] memory) {
         uint totalCandidates = candidateList.length;
         uint[] memory candidateIds = new uint[](totalCandidates);
+        address[] memory candidatesAddr = new address[](totalCandidates);
         uint[] memory total = new uint[](totalCandidates);
 
         for(uint i = 0; i < totalCandidates; i++) {
             candidateIds[i] = candidateList[i].candidateID;
-            total[i] = candidateList[i].totalVote;
+            candidatesAddr[i] = candidateList[i].candidateAddr;
+            total[i] = candidates[candidatesAddr[i]].totalVote;
         } 
 
         return (candidateIds, total);
@@ -126,7 +128,7 @@ contract Voting {
         for(uint i = 0; i < totalCandidates; i++) {
             candidateIds[i] = candidateList[i].candidateID;
             candidateAddr[i] = candidateList[i].candidateAddr;
-            votes[i] = candidateList[i].totalVote;
+            votes[i] = candidates[candidateAddr[i]].totalVote;
         }
 
         return (candidateIds, candidateAddr, votes);
