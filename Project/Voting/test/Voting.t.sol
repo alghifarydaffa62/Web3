@@ -37,13 +37,105 @@ contract VotingTesting is Test {
         voting.registerVoter(voter7);
         vm.stopPrank();
 
-        (, , , bool isRegistered) = voting.voters(voter1);
-        assertTrue(isRegistered, "Voter1 register failed!");
+        (address voterAddr, , , bool isRegistered) = voting.voters(voter1);
+        assertEq(voterAddr, voter1, "voter address not equal");
+        assertTrue(isRegistered, "isRegistered not equal");
     }
 
-    function testRegisterVoternotAdmin() public {
-        vm.prank(candidate1);
-        vm.expectRevert("Only Admin!");
-        voting.registerVoter(voter1);   
+    function testRegisterCandidate() public {
+        vm.startPrank(admin);
+        voting.registerCandidate(candidate1);
+        voting.registerCandidate(candidate2);
+        voting.registerCandidate(candidate3);
+        vm.stopPrank();
+
+        (address candidateAddr, , , bool isCandidate) = voting.candidates(candidate1);
+        assertEq(candidateAddr, candidate1, "Candidate address not equal");
+        assertTrue(isCandidate, "isCandidate not equal");
+    }
+
+    function testVoting() public {
+        vm.startPrank(admin);
+        voting.registerVoter(voter1);
+        voting.registerVoter(voter2);
+        voting.registerVoter(voter3);
+        voting.registerVoter(voter4);
+        voting.registerVoter(voter5);
+        voting.registerCandidate(candidate1);
+        voting.registerCandidate(candidate2);
+        vm.stopPrank();
+
+        vm.prank(admin);
+        voting.startVoting();
+
+        vm.prank(voter1);
+        voting.castVote(0);
+
+        vm.prank(voter2);
+        voting.castVote(0);
+
+        vm.prank(voter3);
+        voting.castVote(0);
+
+        vm.prank(voter4);
+        voting.castVote(1);
+
+        vm.prank(voter5);
+        voting.castVote(1);
+
+        (, , uint total, ) = voting.candidates(candidate1);
+        assertEq(total, 3, "total voting imbalance!");
+    }
+
+    function testShowProgress() public {
+        vm.prank(admin);
+        voting.registerVoter(voter1);
+        voting.registerVoter(voter2);
+        voting.registerVoter(voter3);
+        voting.registerCandidate(candidate1);
+        voting.registerCandidate(candidate2);
+        vm.stopPrank();
+
+        vm.prank(admin);
+        voting.startVoting();
+
+        vm.prank(voter1);
+        voting.castVote(0);
+        vm.prank(voter2);
+        voting.castVote(0);
+        vm.prank(voter3);
+        voting.castVote(1);
+
+        vm.prank(admin);
+        voting.closeVoting();
+
+        (uint[] memory ids, uint[] memory votes) = voting.showProgress();
+        assertEq(votes[0], 1, "Candidate1 harus memiliki 1 suara!");
+        assertEq(votes[1], 1, "Candidate2 harus memiliki 1 suara!");
+    }
+
+    function testShowResult() public {
+        vm.startPrank(admin);
+        voting.registerVoter(voter1);
+        voting.registerVoter(voter2);
+        voting.registerCandidate(candidate1);
+        voting.registerCandidate(candidate2);
+        vm.stopPrank();
+
+        vm.prank(admin);
+        voting.startVoting();
+
+        vm.prank(voter1);
+        voting.castVote(0);
+
+        vm.prank(voter2);
+        voting.castVote(0);
+
+        vm.prank(admin);
+        voting.closeVoting();
+
+        (uint[] memory ids, address[] memory addresses, uint[] memory votes) = voting.showResult();
+        assertEq(votes[0], 2, "Candidate1 harus memiliki 2 suara!");
+        assertEq(votes[1], 0, "Candidate2 harus memiliki 0 suara!");
     }
 }
