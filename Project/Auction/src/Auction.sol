@@ -17,6 +17,8 @@ contract NFTAuction is ReentrancyGuard {
     mapping(address => mapping(uint => bool)) public nftLocked;
 
     event auctionCreated(address indexed nft, uint indexed tokenId, uint minBid);
+    event NewBid(address indexed nft, uint indexed tokenId, address bidder, uint amount);
+    event auctionEnded(address indexed nft, uint indexed tokenId, address winner, uint amount);
 
     function createAuction(address nft, uint tokenId, uint minBid) external {
         IERC721 token = IERC721(nft);
@@ -48,5 +50,27 @@ contract NFTAuction is ReentrancyGuard {
 
         auction.highestBidder = msg.sender;
         auction.highestBid = msg.value;
+
+        emit NewBid(nft, tokenId, msg.sender, msg.value);
+    }
+
+    function endBid(address nft, uint tokenId) external nonReentrant {
+        Auction storage auction = auctions[nft][tokenId];
+        require(auction.isActive, "Auction already ended");
+        require(msg.sender == auction.seller, "You are not the seller");
+
+        auction.isActive = false;
+        nftLocked[nft][tokenId] = false;
+
+        if(auction.highestBidder != address(0)) {
+            payable(auction.seller).transfer(auction.highestBid);
+            IERC721(nft).transferFrom(address(this), auction.highestBidder, tokenId);
+            emit auctionEnded(nft, tokenId, auction.highestBidder, auction.highestBid);
+        } else {
+            IERC721(nft).transferFrom(address(this), auction.seller, tokenId);
+            emit auctionEnded(nft, tokenId, address(0), 0);
+        }
+
+        delete auctions[nft][tokenId];
     }
 }
