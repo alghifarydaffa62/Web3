@@ -4,10 +4,10 @@ pragma solidity ^0.8.20;
 import "openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
 
-abstract contract MyNFT is ERC721URIStorage, Ownable {
+contract MyNFT is ERC721URIStorage, Ownable {
     uint private _nextTokenId;
 
-    constructor() ERC721("MyNFT", "MNFT") {}
+    constructor() ERC721("MyNFT", "MNFT") Ownable(msg.sender) {}
 
     function mintNFT(address to, string memory tokenURI) external onlyOwner {
         uint256 tokenId = _nextTokenId;

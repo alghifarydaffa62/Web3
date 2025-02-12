@@ -54,7 +54,7 @@ contract NFTAuction is ReentrancyGuard {
         emit NewBid(nft, tokenId, msg.sender, msg.value);
     }
 
-    function endBid(address nft, uint tokenId) external nonReentrant {
+    function endAuction(address nft, uint tokenId) external nonReentrant {
         Auction storage auction = auctions[nft][tokenId];
         require(auction.isActive, "Auction already ended");
         require(msg.sender == auction.seller, "You are not the seller");
