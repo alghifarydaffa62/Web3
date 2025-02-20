@@ -31,3 +31,6 @@
 [submodule "Project/Auction/lib/openzeppelin-contracts"]
 	path = Project/Auction/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "Project/Subscription/lib/forge-std"]
+	path = Project/Subscription/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
