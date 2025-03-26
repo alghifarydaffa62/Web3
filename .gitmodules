@@ -37,3 +37,6 @@
 [submodule "Project/Subscription/lib/openzeppelin-contracts"]
 	path = Project/Subscription/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "Danantiri/lib/forge-std"]
+	path = Danantiri/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
