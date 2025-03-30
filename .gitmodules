@@ -40,3 +40,6 @@
 [submodule "Danantiri/lib/forge-std"]
 	path = Danantiri/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "Project/Vault/lib/forge-std"]
+	path = Project/Vault/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
