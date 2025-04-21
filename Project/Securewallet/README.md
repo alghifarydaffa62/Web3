@@ -1,66 +1,54 @@
-## Foundry
+# 🔐 Secure Wallet Smart Contract
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+A simple yet secure Ethereum smart contract wallet that allows registered users (owners) to deposit, withdraw, and transfer Ether with complete control over their funds.
 
-Foundry consists of:
+This contract is designed for **learning, prototyping, and testing**, and can be extended to integrate with front-end dApps or mobile wallets.
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+---
 
-## Documentation
+## 📌 Features
 
-https://book.getfoundry.sh/
+- ✅ Owner registration system
+- 💰 Secure deposit and withdrawal system
+- 🔁 Internal transfer between owners
+- 🧾 Event logging for all key actions
+- 🔒 Access control via `onlyOwner` modifier
 
-## Usage
+---
 
-### Build
+## 🛠 Built With
 
-```shell
-$ forge build
+- **Solidity** `^0.8.20`
+- **Foundry** for testing, building, and local development
+  - `forge`, `anvil`, and `cast` used throughout
+
+---
+
+## 🧠 Smart Contract Overview
+
+### Structure
+
+```solidity
+struct User {
+    uint balances;
+    bool isOwner;
+}
 ```
 
-### Test
-
-```shell
-$ forge test
+### Key Features
+```solidity
+registerOwner()
 ```
-
-### Format
-
-```shell
-$ forge fmt
+* Register sender as an owner
+```solidity
+depositEther()
 ```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
+* Deposit ETH to your wallet balance
+```solidity
+withdawEther(uint amount)
 ```
-
-### Anvil
-
-```shell
-$ anvil
+* Withdraw ETH from your wallet
+```solidity
+Transfer(address recipient, uint amount)
 ```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+* Send ETH balance to another owner
