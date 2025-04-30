@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
 import {Test, console} from "forge-std/Test.sol";
-import {CrowdFunding} from "../src/Crowdfunding.sol";
+import {CrowdFunding} from "../src/CrowdFunding.sol";
 
 contract CrowdFundingTest is Test {
     CrowdFunding public crowdfunding;
@@ -23,11 +23,17 @@ contract CrowdFundingTest is Test {
 
         crowdfunding.createCampaign(targetAmount, deadline);
 
-        uint campaignId = getMockedCampaignId();
+        uint campaignId = 0;
 
-        (address campaignOwner, uint ID, uint target, uint deadlineTime, uint totalAmount, bool isComplete) = crowdfunding.campaigns(campaignId);
+        (
+            address campaignOwner,
+            uint target,
+            uint deadlineTime,
+            uint totalAmount,
+            bool isComplete
+        ) = crowdfunding.getCampaign(campaignId);
+
         assertEq(campaignOwner, owner, "Owner mismatch");
-        assertEq(ID, campaignId, "ID mismatch");
         assertEq(target, targetAmount, "Target amount mismatch");
         assertApproxEqAbs(deadlineTime, block.timestamp + deadline, 1, "Deadline mismatch");
         assertEq(totalAmount, 0, "Initial total amount mismatch");
@@ -39,18 +45,26 @@ contract CrowdFundingTest is Test {
         uint deadline = 1 days;
 
         crowdfunding.createCampaign(targetAmount, deadline);
-        uint campaignId = getMockedCampaignId();
+        uint campaignId = 0;
 
-        vm.prank(donor1);
         vm.deal(donor1, 5 ether);
+        vm.startPrank(donor1);
         crowdfunding.donate{value: 5 ether}(campaignId);
+        vm.stopPrank();
 
-        vm.prank(donor2);
         vm.deal(donor2, 3 ether);
+        vm.startPrank(donor2);
         crowdfunding.donate{value: 3 ether}(campaignId);
+        vm.stopPrank();
 
-        (, , , , uint totalAmount, ) = crowdfunding.campaigns(campaignId);
+        (, , , uint totalAmount, ) = crowdfunding.getCampaign(campaignId);
         assertEq(totalAmount, 8 ether, "Total amount mismatch");
+
+        uint donation1 = crowdfunding.getDonation(campaignId, donor1);
+        uint donation2 = crowdfunding.getDonation(campaignId, donor2);
+
+        assertEq(donation1, 5 ether, "Donor1 donation mismatch");
+        assertEq(donation2, 3 ether, "Donor2 donation mismatch");
     }
 
     function testWithdraw() public {
@@ -58,36 +72,24 @@ contract CrowdFundingTest is Test {
         uint deadline = 1 days;
 
         crowdfunding.createCampaign(targetAmount, deadline);
-        uint campaignId = getMockedCampaignId();
+        uint campaignId = 0;
 
-        // Donor mendanai kampanye
         vm.deal(donor1, 10 ether);
         vm.prank(donor1);
         crowdfunding.donate{value: 10 ether}(campaignId);
 
-        // Berikan saldo ke kontrak agar withdraw berhasil
-        vm.deal(address(crowdfunding), 10 ether);
-
-        (, , , , uint total,) = crowdfunding.campaigns(campaignId);
-        assertEq(total, 10 ether, "FALSE!");
-
-        // Lewati waktu agar campaign selesai
         vm.warp(block.timestamp + 2 days);
 
-        // Simpan saldo awal pemilik
         uint initialBalance = address(owner).balance;
 
-        // Pemilik menarik dana
-        vm.prank(owner);
         crowdfunding.withdraw(campaignId);
 
-        // Saldo setelah menarik dana
         uint finalBalance = address(owner).balance;
         assertEq(finalBalance, initialBalance + 10 ether, "Owner withdrawal mismatch");
 
-        (, , , , uint totalAmount, bool isComplete) = crowdfunding.campaigns(campaignId);
-        assertEq(totalAmount, 0, "Campaign total amount should be zero after withdrawal");
-        assertTrue(isComplete, "Campaign should be marked as complete");
+        (, , , uint totalAmount, bool isComplete) = crowdfunding.getCampaign(campaignId);
+        assertEq(totalAmount, 0, "Total should be 0 after withdraw");
+        assertTrue(isComplete, "Should be marked complete");
     }
 
     function testRefund() public {
@@ -95,11 +97,12 @@ contract CrowdFundingTest is Test {
         uint deadline = 1 days;
 
         crowdfunding.createCampaign(targetAmount, deadline);
-        uint campaignId = getMockedCampaignId();
+        uint campaignId = 0;
 
-        vm.prank(donor1);
         vm.deal(donor1, 5 ether);
+        vm.startPrank(donor1);
         crowdfunding.donate{value: 5 ether}(campaignId);
+        vm.stopPrank();
 
         vm.warp(block.timestamp + 2 days);
 
@@ -108,13 +111,7 @@ contract CrowdFundingTest is Test {
         crowdfunding.refund(campaignId);
         uint finalBalance = donor1.balance;
 
-        assertEq(finalBalance, initialBalance + 5 ether, "Refund amount mismatch");
+        assertEq(finalBalance, initialBalance + 5 ether, "Refund mismatch");
     }
-
-    function getMockedCampaignId() internal view returns (uint) {
-        uint hash = uint(keccak256(abi.encodePacked(owner, block.timestamp, uint256(1))));
-        return hash % 100000000;
-    }
-
-    
 }
+

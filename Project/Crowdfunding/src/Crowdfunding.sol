@@ -12,78 +12,100 @@ contract CrowdFunding {
         mapping(address => uint) donates;
     }
 
-    mapping(uint => Campaign) public campaigns;
+    mapping(uint => Campaign) private campaigns;
+    mapping(uint => address[]) private donors;
     uint public campaignCount;
 
-    event CampaignCreated(address indexed owner, uint target, uint deadline);
-    event donateSuccess(address indexed donor, uint amount);
-    event withdrawn(address indexed owner, uint amount);
-    event refunded(address indexed donor, uint amount);
+    event CampaignCreated(address indexed owner, uint target, uint deadline, uint ID);
+    event DonateSuccess(address indexed donor, uint amount, uint campaignId);
+    event Withdrawn(address indexed owner, uint amount, uint campaignId);
+    event Refunded(address indexed donor, uint amount, uint campaignId);
 
-    function generateId() internal view returns(uint) {
-        uint hash = uint(keccak256(abi.encodePacked(msg.sender, block.timestamp, campaignCount)));
-        return hash % 100000000;
-    }
+    function createCampaign(uint _targetAmount, uint _durationInSeconds) external {
+        uint id = campaignCount++;
+        Campaign storage campaign = campaigns[id];
 
-    function createCampaign(uint _targetAmount, uint _deadline) external {
-        campaignCount++;
-        uint uniqueID = generateId();
-        Campaign storage campaign = campaigns[uniqueID];
         campaign.owner = msg.sender;
-        campaign.ID = uniqueID;
+        campaign.ID = id;
         campaign.targetAmount = _targetAmount;
-        campaign.deadline = block.timestamp + _deadline;
+        campaign.deadline = block.timestamp + _durationInSeconds;
         campaign.totalAmount = 0;
         campaign.isComplete = false;
 
-        emit CampaignCreated(msg.sender, _targetAmount, _deadline);
+        emit CampaignCreated(msg.sender, _targetAmount, campaign.deadline, id);
     }
 
-    function donate(uint Id) external payable {
-        Campaign storage campaign = campaigns[Id];
-        require(campaign.owner != address(0), "Campaign is not existed!");
-        require(!campaign.isComplete, "Campaign already closed!");
-        require(block.timestamp <= campaign.deadline, "Campaign already expired!");
-        require(msg.value > 0, "must send ether!");
+    function donate(uint _id) external payable {
+        Campaign storage campaign = campaigns[_id];
+        require(campaign.owner != address(0), "Campaign does not exist");
+        require(!campaign.isComplete, "Campaign already complete");
+        require(block.timestamp <= campaign.deadline, "Campaign expired");
+        require(msg.value > 0, "Must send ETH");
+
+        if (campaign.donates[msg.sender] == 0) {
+            donors[_id].push(msg.sender);
+        }
 
         campaign.totalAmount += msg.value;
         campaign.donates[msg.sender] += msg.value;
-        emit donateSuccess(msg.sender, msg.value);
+
+        emit DonateSuccess(msg.sender, msg.value, _id);
     }
 
-    function withdraw(uint Id) external payable{
-        Campaign storage campaign = campaigns[Id];
-        require(campaign.owner != address(0), "Campaign is not existed!");
-        require(msg.sender == campaign.owner, "You are not the owner");
-        require(campaign.totalAmount >= campaign.targetAmount, "Target has not been achieved");
-        require(block.timestamp > campaign.deadline, "Campaign is still active!");
-        require(!campaign.isComplete, "Funds already withdrawn!");
-        
+    function withdraw(uint _id) external {
+        Campaign storage campaign = campaigns[_id];
+        require(campaign.owner == msg.sender, "Not campaign owner");
+        require(block.timestamp > campaign.deadline, "Campaign still active");
+        require(!campaign.isComplete, "Already withdrawn");
+        require(campaign.totalAmount >= campaign.targetAmount, "Target not reached");
+
         campaign.isComplete = true;
-        uint total = campaign.totalAmount;
-        require(address(this).balance >= total, "Contract does not have enough balance!");
-        
-        (bool success,) = msg.sender.call{value: total}("");
-        require(success, "Failed!, this is the error!");
+        uint amount = campaign.totalAmount;
         campaign.totalAmount = 0;
 
-        emit withdrawn(msg.sender, total);
+        (bool success, ) = payable(campaign.owner).call{value: amount}("");
+        require(success, "Transfer failed");
     }
 
-    function refund(uint Id) external payable {
-        Campaign storage campaign = campaigns[Id];
-        require(campaign.owner != address(0), "Campaign is not existed!");
-        require(campaign.totalAmount < campaign.targetAmount, "Target is reached!, no refunds!");
-        require(block.timestamp > campaign.deadline, "Campaign is still active!, no refunds!");
-        require(!campaign.isComplete, "funds is withdrawn, no refunds!");
+    function refund(uint _id) external {
+        Campaign storage campaign = campaigns[_id];
+        require(campaign.owner != address(0), "Campaign does not exist");
+        require(block.timestamp > campaign.deadline, "Campaign still active");
+        require(campaign.totalAmount < campaign.targetAmount, "Target reached");
+        require(!campaign.isComplete, "Already completed");
 
-        uint donateAmount = campaign.donates[msg.sender];
-        require(donateAmount > 0, "No donations, no refunds!");
+        uint donated = campaign.donates[msg.sender];
+        require(donated > 0, "No donations to refund");
 
-        (bool success,) = msg.sender.call{value: donateAmount}("");
-        require(success);
         campaign.donates[msg.sender] = 0;
 
-        emit refunded(msg.sender, campaign.donates[msg.sender]);
+        (bool success, ) = msg.sender.call{value: donated}("");
+        require(success, "Refund failed");
+
+        emit Refunded(msg.sender, donated, _id);
+    }
+
+    function getDonation(uint _id, address _donor) external view returns (uint) {
+        return campaigns[_id].donates[_donor];
+    }
+
+    function getCampaign(uint _id)
+        external
+        view
+        returns (
+            address owner,
+            uint targetAmount,
+            uint deadline,
+            uint totalAmount,
+            bool isComplete
+        )
+    {
+        Campaign storage c = campaigns[_id];
+        return (c.owner, c.targetAmount, c.deadline, c.totalAmount, c.isComplete);
+    }
+
+    function getDonors(uint _id) external view returns (address[] memory) {
+        return donors[_id];
     }
 }
+
