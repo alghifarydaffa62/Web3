@@ -1,9 +1,11 @@
 import { useState } from "react";
 import server from "./server";
+import { toHex } from 'ethereum-cryptography/utils'
 
-function Transfer({ address, setBalance }) {
+function Transfer({ address, setBalance, signature, setSignature }) {
   const [sendAmount, setSendAmount] = useState("");
   const [recipient, setRecipient] = useState("");
+  const [sign, setSign] = useState("");
 
   const setValue = (setter) => (evt) => setter(evt.target.value);
 
@@ -17,6 +19,7 @@ function Transfer({ address, setBalance }) {
         sender: address,
         amount: parseInt(sendAmount),
         recipient,
+        signature: toHex(signature),
       });
       setBalance(balance);
     } catch (ex) {
@@ -43,6 +46,15 @@ function Transfer({ address, setBalance }) {
           placeholder="Type an address, for example: 0x2"
           value={recipient}
           onChange={setValue(setRecipient)}
+        ></input>
+      </label>
+
+      <label>
+       Signature
+        <input
+          placeholder="Sign this transaction"
+          value={sign}
+          onChange={setValue(setSign)}
         ></input>
       </label>
 

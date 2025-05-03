@@ -1,6 +1,9 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const secp = require('ethereum-cryptography/secp256k1')
+const { toHex } = require('ethereum-cryptography/utils')
+const { keccak256 } = require('ethereum-cryptography/keccak')
 const port = 3042;
 
 app.use(cors());
@@ -19,10 +22,12 @@ app.get("/balance/:address", (req, res) => {
 });
 
 app.post("/send", (req, res) => {
-  const { sender, recipient, amount } = req.body;
+  const { sender, recipient, amount, signature } = req.body;
 
-  setInitialBalance(sender);
   setInitialBalance(recipient);
+
+  const publicKey = secp.secp256k1.getPublicKey(signature)
+  sender = keccak256(publicKey.slice(1)).slice(-20)
 
   if (balances[sender] < amount) {
     res.status(400).send({ message: "Not enough funds!" });
