@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { keccak256 } from 'ethereum-cryptography/keccak'
-import { utf8ToBytes, toHex } from "ethereum-cryptography/utils"
-import * as secp from 'ethereum-cryptography/secp256k1'
+import { keccak256 } from "ethereum-cryptography/keccak";
+import { utf8ToBytes, toHex } from "ethereum-cryptography/utils";
+import * as secp from "ethereum-cryptography/secp256k1";
 import server from "./server";
 
-function Transfer({ address, setBalance}) {
+function Transfer({ address, setBalance }) {
   const [sendAmount, setSendAmount] = useState("");
   const [recipient, setRecipient] = useState("");
   const [privateKey, setPrivateKey] = useState("");
@@ -13,29 +13,28 @@ function Transfer({ address, setBalance}) {
 
   async function transfer(evt) {
     evt.preventDefault();
+
     const message = `${address}:${recipient}:${sendAmount}`;
     const messageBytes = utf8ToBytes(message);
     const messageHash = keccak256(messageBytes);
 
-    const [signature, recoveryBit] = secp.secp256k1.sign(messageHash, privateKey, {recovered: true});
-    
     try {
+      const signature = await secp.secp256k1.sign(messageHash, privateKey);
+
       const {
         data: { balance },
       } = await server.post(`send`, {
         sender: address,
         amount: parseInt(sendAmount),
         recipient,
-        signature: {
-          r: toHex(signature.slice(0, 32)),
-          s: toHex(signature.slice(32, 64)),
-          recovery: recoveryBit
-        },
+        message,
+        signature: toHex(signature),
       });
+
       setBalance(balance);
     } catch (ex) {
-      // alert(ex.response.data.message);
-      alert(ex.response?.data?.message || "Transaction failed");
+      alert(ex?.response?.data?.message || ex.message || "Transaction failed");
+      console.error(ex);
     }
   }
 
@@ -44,7 +43,7 @@ function Transfer({ address, setBalance}) {
       <h1>Send Transaction</h1>
 
       <label>
-       Private key
+        Private key
         <input
           placeholder="Your private key"
           value={privateKey}
@@ -75,4 +74,5 @@ function Transfer({ address, setBalance}) {
   );
 }
 
-export default Transfer;
+export default Transfer
+

@@ -32,7 +32,7 @@ app.post("/send", async (req, res) => {
       ...Buffer.from(signature.s, "hex"),
     ]);
 
-    const publicKey = secp.secp256k1.recoverPublicKey(messageHash, signatureBytes, signature.recovery);
+    const publicKey = secp.secp256k1.recoverPublicKey(messageHash, signatureBytes);
     const recoveredAddress = toHex(keccak256(publicKey.slice(1)).slice(-20));
 
     if (recoveredAddress !== sender) {
