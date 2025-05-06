@@ -52,7 +52,7 @@ contract Marketplace {
 
         buyers[msg.sender] = Buyer({
             buyer: msg.sender,
-            cart: new uint[],
+            cart: new uint[](0),
             totalSpent: 0
         });        
         emit registerBuyerSuccess(msg.sender);
@@ -63,7 +63,7 @@ contract Marketplace {
 
         sellers[msg.sender] = Seller({
             seller: msg.sender,
-            productOwn: new uint ,
+            productOwn: new uint[](0),
             revenue: 0
         });
 
