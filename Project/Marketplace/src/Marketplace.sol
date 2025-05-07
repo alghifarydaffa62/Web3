@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 contract Marketplace {
     struct Buyer {
         address buyer;
+        uint balance;
         uint[] cart;
         uint totalSpent;
     }
@@ -14,6 +15,7 @@ contract Marketplace {
         string name;
         uint price;
         uint stock;
+        bool soldOut;
     }
 
     struct Seller {
@@ -33,8 +35,10 @@ contract Marketplace {
 
     event registerSellerSuccess(address indexed seller);
     event registerBuyerSuccess(address indexed buyer);
+    event depositSuccess(address indexed buyer, uint amount);
+    event withdrawSuccess(address indexed seller, uint amount);
     event createProductSuccess(address indexed seller, uint productId, string name, uint price, uint stock);
-    event checkOut(address indexed buyer, uint totalSpent);
+    event checkOutSuccess(address indexed buyer, uint totalSpent);
     event addedToCart(address indexed buyer, uint indexed productId);
 
     modifier onlySeller {
@@ -52,6 +56,7 @@ contract Marketplace {
 
         buyers[msg.sender] = Buyer({
             buyer: msg.sender,
+            balance: 0,
             cart: new uint[](0),
             totalSpent: 0
         });        
@@ -70,31 +75,68 @@ contract Marketplace {
         emit registerSellerSuccess(msg.sender);
     }
 
+    function deposit() external payable onlyBuyer {
+        require(msg.value > 0, "must send ether!");
+        buyers[msg.sender].balance += msg.value;
+        emit depositSuccess(msg.sender, msg.value);
+    }
+
+    function withdraw(uint amount) external payable onlySeller {
+        require(sellers[msg.sender].revenue >= amount, "Insufficient balance!");
+
+        sellers[msg.sender].revenue -= amount;
+        (bool success,) = msg.sender.call{value: amount}("");
+        require(success, "withdraw failed!");
+
+        emit withdrawSuccess(msg.sender, amount);
+    }
+
     function createProduct(string memory name, uint price, uint stock) external onlySeller {
         productCount++;
-        products[msg.sender] = Product(msg.sender, productCount, name, price, stock);
+        products[productCount] = Product(msg.sender, productCount, name, price, stock, false);
         sellers[msg.sender].productOwn.push(productCount);
 
         emit createProductSuccess(msg.sender, productCount, name, price, stock);
     }
-
-    function buyProduct(uint productId) external onlyBuyer {
-        Product storage product = products[productId];
-        require(product.stock > 0, "sold out!");
-        require(msg.value == product.price, "incorrect amount");
-
-        product.stock--;
-        sellers[product.owner].revenue += msg.value;
-
-        buyers[msg.sender].totalSpent += msg.value;
-        buyers[msg.sender].cart.push(productId);
-    }
     
-    function addToCart() external onlyBuyer() {
-        // on going
+    function addToCart(uint productId) external payable onlyBuyer() {
+        Product storage product = products[productId];
+        require(!product.soldOut, "sold out!");
+
+        buyers[msg.sender].cart.push(productId);
+
+        emit addedToCart(msg.sender, productId);
     }
 
-    function checkOut() external onlyBuyer() {
-        // on going
+    function checkOut() external payable onlyBuyer() {
+        Buyer storage buyer = buyers[msg.sender];
+        require(buyer.cart.length > 0, "Cart is empty!");
+
+        uint totalPrice = 0;
+        for(uint i = 0; i < buyer.cart.length; i++) {
+            uint productId = buyer.cart[i];
+            Product storage product = products[productId];
+
+            totalPrice += product.price;
+        }
+
+        require(buyer.balance >= totalPrice, "Insufficient balances!");
+
+        for(uint i = 0; i < buyer.cart.length; i++) {
+            uint productId = buyer.cart[i];
+            Product storage product = products[productId];
+
+            product.stock--;
+            if(product.stock == 0) {
+                product.soldOut = true;
+            }
+
+            sellers[product.owner].revenue += product.price;
+        }
+
+        buyer.balance -= totalPrice;
+        delete buyer.cart;
+
+        emit checkOutSuccess(msg.sender, totalPrice);
     }
 }
