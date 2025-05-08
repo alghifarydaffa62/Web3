@@ -25,7 +25,13 @@ contract Marketplace {
     }
 
     struct Market {
-        uint[] activeProducts;
+        uint[] allProducts;
+    }
+
+    struct History {
+        uint timestamp;
+        string history;
+        uint totalBuy;
     }
 
     uint public productCount;
@@ -38,8 +44,11 @@ contract Marketplace {
     event depositSuccess(address indexed buyer, uint amount);
     event withdrawSuccess(address indexed seller, uint amount);
     event createProductSuccess(address indexed seller, uint productId, string name, uint price, uint stock);
-    event checkOutSuccess(address indexed buyer, uint totalSpent);
+    event priceUpdated(address indexed seller, uint indexed productId, uint newPrice);
+    event stockUpdated(address indexed seller, uint indexed productId, uint newStock);
     event addedToCart(address indexed buyer, uint indexed productId);
+    event itemRemoved(address indexed buyer, uint indexed productId);
+    event checkOutSuccess(address indexed buyer, uint totalSpent);
 
     modifier onlySeller {
         require(sellers[msg.sender].seller != address(0), "Your role is not the seller");
@@ -92,19 +101,35 @@ contract Marketplace {
     }
 
     function createProduct(string memory name, uint price, uint stock) external onlySeller {
+        require(price > 0, "Invalid Price!");
+        require(stock > 0, "Invalid Price!");
+        require(bytes(name).length > 0, "Product name cannot be empty!");
+
         productCount++;
         products[productCount] = Product(msg.sender, productCount, name, price, stock, false);
         sellers[msg.sender].productOwn.push(productCount);
 
         emit createProductSuccess(msg.sender, productCount, name, price, stock);
     }
-    
+
     function updatePrice(uint productId, uint newPrice) external onlySeller {
         require(newPrice > 0, "Invalid price!");
         Product storage product = products[productId];
 
         require(product.owner == msg.sender);
         product.price = newPrice;
+
+        emit priceUpdated(msg.sender, productId, newPrice);
+    }
+
+    function updateStock(uint productId, uint newStock) external onlySeller {
+        require(newStock > 0, "Invalid stock!");
+        Product storage product = products[productId];
+
+        require(product.owner == msg.sender);
+        product.stock = newStock;
+
+        emit stockUpdated(msg.sender, productId, newStock);
     }
     
     function addToCart(uint productId) external payable onlyBuyer() {
@@ -128,6 +153,7 @@ contract Marketplace {
 
                 cart.pop();
                 buyer.totalSpent -= products[productId].price;
+                emit itemRemoved(msg.sender, productId);
                 return;
             }
         }
@@ -169,5 +195,9 @@ contract Marketplace {
 
     function showCart() external view onlyBuyer returns(uint[] memory) {
         return buyers[msg.sender].cart;
+    }
+
+    function showRevenue() external view onlySeller returns(uint) {
+        return sellers[msg.sender].revenue;
     }
 }
