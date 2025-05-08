@@ -99,6 +99,14 @@ contract Marketplace {
         emit createProductSuccess(msg.sender, productCount, name, price, stock);
     }
     
+    function updatePrice(uint productId, uint newPrice) external onlySeller {
+        require(newPrice > 0, "Invalid price!");
+        Product storage product = products[productId];
+
+        require(product.owner == msg.sender);
+        product.price = newPrice;
+    }
+    
     function addToCart(uint productId) external payable onlyBuyer() {
         Product storage product = products[productId];
         require(!product.soldOut, "sold out!");
@@ -106,6 +114,25 @@ contract Marketplace {
         buyers[msg.sender].cart.push(productId);
 
         emit addedToCart(msg.sender, productId);
+    }
+
+    function removeFromCart(uint productId) external onlyBuyer {
+        Buyer storage buyer = buyers[msg.sender];
+        uint[] storage cart = buyer.cart;
+
+        for(uint i = 0; i < cart.length; i++) {
+            if(cart[i] == productId) {
+                for(uint j = i; j < cart.length - 1; j++){
+                    cart[j] = cart[j + 1];
+                }
+
+                cart.pop();
+                buyer.totalSpent -= products[productId].price;
+                return;
+            }
+        }
+
+        revert("Product not found in cart");
     }
 
     function checkOut() external payable onlyBuyer() {
@@ -138,5 +165,9 @@ contract Marketplace {
         delete buyer.cart;
 
         emit checkOutSuccess(msg.sender, totalPrice);
+    }
+
+    function showCart() external view onlyBuyer returns(uint[] memory) {
+        return buyers[msg.sender].cart;
     }
 }
