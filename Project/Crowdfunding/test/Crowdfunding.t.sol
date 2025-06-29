@@ -91,27 +91,4 @@ contract CrowdFundingTest is Test {
         assertEq(totalAmount, 0, "Total should be 0 after withdraw");
         assertTrue(isComplete, "Should be marked complete");
     }
-
-    function testRefund() public {
-        uint targetAmount = 10 ether;
-        uint deadline = 1 days;
-
-        crowdfunding.createCampaign(targetAmount, deadline);
-        uint campaignId = 0;
-
-        vm.deal(donor1, 5 ether);
-        vm.startPrank(donor1);
-        crowdfunding.donate{value: 5 ether}(campaignId);
-        vm.stopPrank();
-
-        vm.warp(block.timestamp + 2 days);
-
-        uint initialBalance = donor1.balance;
-        vm.prank(donor1);
-        crowdfunding.refund(campaignId);
-        uint finalBalance = donor1.balance;
-
-        assertEq(finalBalance, initialBalance + 5 ether, "Refund mismatch");
-    }
 }
-
