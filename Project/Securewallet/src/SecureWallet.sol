@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 /**
  * @title SecureWallet
+ * @author [M Daffa Al Ghifary a.k.a dfpro]
  * @notice A secure wallet contract for storing, withdrawing and transferring Ether between user
  * @dev This contract uses a custom struct `User` to track balance and ownership status
  */

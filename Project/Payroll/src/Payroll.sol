@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 /**
  * @title Payroll smart contract
+ * @author [M Daffa Al Ghifary a.k.a dfpro]
  * @notice A Payroll smart contract to manage employees, pay salaries and remove employees
  * @dev Only the admin (contract deployer) can manage payroll operations
  */
@@ -81,7 +82,7 @@ contract Payroll {
      * @param _salary The amount of salary
      * @dev Only unregistered employee can be added using this 
         function and the salary must be greater than zero
-     * @dev Successfully added new mployee using this function
+     * @dev Successfully added new employee using this function
          will emit the EmployeeRegisterSuccess event
      */
     function addEmployee(address _employee, uint _salary) external onlyAdmin {
@@ -92,32 +93,29 @@ contract Payroll {
         emit employeeRegisterSuccess(msg.sender, _employee, _salary);
     }
 
-    function findEmployee(address _employee) internal view returns(bool) {
-        for(uint i = 0; i < employees.length; i++) {
-            if(employees[i].employee == _employee) {
-                return true;
-            }
-        }
-        return false;
-    }
-
+    /**
+     * @notice Pays salary to all registered employees
+     * @dev Only admin can call this functing, and the contract's 
+        balance should be greater than or equal to total of employee salary
+     * @dev Souccessfully payed salary will emit the salaryPayed event
+     */
     function paySalaries() external onlyAdmin {
-        uint totalSalaries = 0;
-
-        for(uint i = 0; i < employees.length; i++) {
-            totalSalaries += employees[i].salary;
-        }
-
+        uint totalSalaries = getTotalSalaries();
         require(companyBalance >= totalSalaries, "Not enough balance to pay salary!");
 
         for(uint i = 0; i < employees.length; i++) {
             (bool success,) = employees[i].employee.call{value: employees[i].salary}("");
             require(success, "Payment failed!");
             companyBalance -= employees[i].salary;
+
             emit salaryPayed(msg.sender, employees[i].employee, employees[i].salary);
         }
     }
 
+    /**
+     * @notice Removes an employee from the payroll
+     * @dev Only the admin can call this function
+     */
     function removeEmployee(address _employee) external onlyAdmin {
         for(uint i = 0; i < employees.length; i++) {
             if(employees[i].employee == _employee) {
@@ -129,12 +127,37 @@ contract Payroll {
         }
     }
 
-    // FUNCTION HELPER TESTING
+    // -----------------------
+    // INTERNAL HELPER
+    // -----------------------
+    
+    /**
+     * @notice Checks if an employee is already registered
+     * @param _employee Address of the employee
+     * @return true if employee already registered, false otherwise
+     */
+    function findEmployee(address _employee) internal view returns(bool) {
+        for(uint i = 0; i < employees.length; i++) {
+            if(employees[i].employee == _employee) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @notice Returns employee details at a specificied index
+     * @param index Index in the employees array
+     * @return Address of the employee and the salary
+     */
     function getEmployee(uint index) public view returns (address, uint) {
         require(index < employees.length, "Index out of bounds");
         return (employees[index].employee, employees[index].salary);
     }
 
+    /**
+     * @notice Returns total amount of salaries
+     */
     function getTotalSalaries() public view returns (uint) {
         uint total = 0;
         for (uint i = 0; i < employees.length; i++) {
@@ -143,6 +166,9 @@ contract Payroll {
         return total;
     }
 
+    /**
+     * @notice Returns a number of registered employees
+     */
     function getEmployeeCount() public view returns (uint) {
         return employees.length;
     }

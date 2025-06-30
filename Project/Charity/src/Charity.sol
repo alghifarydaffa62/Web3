@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 /**
  * @title Charity
+ * @author [M Daffa Al Ghifary a.k.a dfpro]
  * @notice A simple and secure charity wallet to receive donations and distribute them to the recipient
  * @dev Only the owner can close the charity and send collected funds into recipient
  */

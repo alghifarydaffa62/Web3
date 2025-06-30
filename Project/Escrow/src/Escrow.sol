@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 /**
  * @title Escrow smart contract
+ * @author [M Daffa Al Ghifary a.k.a dfpro]
  * @notice A smart contract for securing payments 
     between a service provider and a deployer with an arbiter as the third party
  * @dev The arbiter has the authority to either release the funds to the service provide

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 /**
  * @title CrowdFunding smart contract
+ * @author [M Daffa Al Ghifary a.k.a dfpro]
  * @notice A decentralized crowdfunding contract where users 
     can create fundraising campaign and receive donations 
  */ 
